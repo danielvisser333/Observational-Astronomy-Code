@@ -4,6 +4,8 @@ import astropy.io.fits as fits
 import ccdproc
 import astroalign as aa
 import math
+import astropy.io.ascii as asc
+from astropy.wcs import WCS
 
 
 # Print a 2D array with header
@@ -89,6 +91,24 @@ def combine_images(files_in, file_out):
     print(f"Created new combined image {file_out}")
 
 
+def match_star_magnitudes(urat_name):
+    pcoo_element = None
+    for element in pcoo:
+        pcoo_element = element
+        if element[2] == urat_name:
+            star_urat = element
+            break
+    star_g_data = None
+    for star in g_data:
+        if np.linalg.norm(np.array(star[1], star[2]) - np.array(star_urat[0], star_urat[1])) < 3:
+            star_g_data = star
+            star_r_data = r_data[star_g_data[0] - 1]
+            break
+    if star_g_data is None:
+        return []
+    return urat_name, star_g_data[5], star_g_data[6], star_r_data[5], star_r_data[6], pcoo_element
+
+
 # Start
 print("Observational Astronomy Data")
 
@@ -143,3 +163,79 @@ flatfield_normalisation(flat_r_file_names, flat_r_file_names_out, './processing/
 
 combine_images(sloan_g_file_names, "./processing/sloan_g_combined.fit")
 combine_images(sloan_r_file_names, "./processing/sloan_r_combined.fit")
+
+os.system("sex ./processing/sloan_g_combined.fit -CATALOG_NAME ./processing/g.cat")
+os.system("sex ./processing/sloan_g_combined.fit,./processing/sloan_r_combined.fit -CATALOG_NAME ./processing/r.cat")
+
+g_data = asc.read('./processing/g.cat')
+r_data = asc.read('./processing/r.cat')
+
+# Load the data from the URAT catalogue around M67
+name, right_ascension, declination = [], [], []
+with open("./data/urat.txt") as f:
+    for line in f:
+        line_data = line.split()
+        name.append(line_data[0])
+        right_ascension.append(float(line_data[1]))
+        declination.append(float(line_data[2]))
+
+w = WCS("./data/new-image.fits")
+xy = w.all_world2pix(right_ascension, declination, 0)
+
+pcoo = []
+for _x, _y, _name in zip(xy[0], xy[1], name):
+    pcoo.append((_x, _y, _name))
+
+urat = []
+urat_with_instrumental_magnitudes = []
+pcoo_new = []
+with open("./data/urat.txt") as f:
+    for line in f:
+        lsplit = line.split()
+        urat.append(lsplit)
+for star in urat:
+    matched = match_star_magnitudes(star[0])
+    if matched == [] or matched[2] > 0.05 or matched[4] > 0.05:
+        continue
+    if len(star) != 7:
+        continue
+    new_star = star
+    for data in matched[1:]:
+        new_star.append(str(data))
+    print(f"Matched {new_star[0]}")
+    urat_with_instrumental_magnitudes.append(new_star)
+    pcoo_new.append(matched[-1])
+
+g_offsets = []
+r_offsets = []
+for star in urat_with_instrumental_magnitudes:
+    g_offsets.append(float(star[3])-float(star[7]))
+    r_offsets.append(float(star[5])-float(star[9]))
+g_offsets = np.array(g_offsets)
+r_offsets = np.array(r_offsets)
+g_offset = np.mean(g_offsets)
+r_offset = np.mean(r_offsets)
+print("g offset:", g_offset)
+print("r offset:", r_offset)
+
+for i in range(len(g_data)):  # Add the zero point value to the source extractor data
+    g_data[i]["MAG_APER"] += g_offset
+    r_data[i]["MAG_APER"] += r_offset
+
+g_r = []
+g = []
+for i in range(len(g_data)):
+    if g_data[i]["MAGERR_APER"] > 1 or r_data[i]["MAGERR_APER"] > 1:
+        continue  # I had quite a lot of really inaccurate data, this gets rid of it
+    if g_data[i]["X_IMAGE"] > 2000 and g_data[i]["Y_IMAGE"] < 220:
+        continue  # This is the area of the field that had ice on it
+    g_r.append(g_data[i]["MAG_APER"]-r_data[i]["MAG_APER"])
+    g.append(g_data[i]["MAG_APER"])
+g_r = np.array(g_r)
+g = np.array(g)
+
+B_V = 0.90*g_r + 0.21
+V = g - 0.58*g_r - 0.01
+
+MVH, BVH = np.loadtxt('./data/Hyades.txt', usecols=(1, 2), unpack=True)
+MVP, BVP = np.loadtxt('./data/Pleiades.txt', usecols=(1, 2), unpack=True)
