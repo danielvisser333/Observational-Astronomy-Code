@@ -124,50 +124,50 @@ if not os.path.isdir('./processing'):
     os.makedirs('./processing')
 
 # Print the data from the FITS files
-# flat_g_image_headers = []
-# flat_r_image_headers = []
-# sloan_g_image_headers = []
-# sloan_r_image_headers = []
-#
-# for i in range(10):
-#     flat_g_data, flat_g_header = fits.getdata(flat_g_file_names[i], header=True)
-#     flat_r_data, flat_r_header = fits.getdata(flat_r_file_names[i], header=True)
-#     sloan_g_data, sloan_g_header = fits.getdata(sloan_g_file_names[i], header=True)
-#     sloan_r_data, sloan_r_header = fits.getdata(sloan_r_file_names[i], header=True)
-#     flat_g_image_headers.append(filter_header_data(flat_g_file_names[i], flat_g_header, np.mean(flat_g_data)))
-#     flat_r_image_headers.append(filter_header_data(flat_r_file_names[i], flat_r_header, np.mean(flat_r_data)))
-#     sloan_g_image_headers.append(filter_header_data(sloan_g_file_names[i], sloan_g_header, np.mean(sloan_g_data)))
-#     sloan_r_image_headers.append(filter_header_data(sloan_r_file_names[i], sloan_r_header, np.mean(sloan_g_data)))
-#
+flat_g_image_headers = []
+flat_r_image_headers = []
+sloan_g_image_headers = []
+sloan_r_image_headers = []
+
+for i in range(10):
+    flat_g_data, flat_g_header = fits.getdata(flat_g_file_names[i], header=True)
+    flat_r_data, flat_r_header = fits.getdata(flat_r_file_names[i], header=True)
+    sloan_g_data, sloan_g_header = fits.getdata(sloan_g_file_names[i], header=True)
+    sloan_r_data, sloan_r_header = fits.getdata(sloan_r_file_names[i], header=True)
+    flat_g_image_headers.append(filter_header_data(flat_g_file_names[i], flat_g_header, np.mean(flat_g_data)))
+    flat_r_image_headers.append(filter_header_data(flat_r_file_names[i], flat_r_header, np.mean(flat_r_data)))
+    sloan_g_image_headers.append(filter_header_data(sloan_g_file_names[i], sloan_g_header, np.mean(sloan_g_data)))
+    sloan_r_image_headers.append(filter_header_data(sloan_r_file_names[i], sloan_r_header, np.mean(sloan_g_data)))
+
 # # Display the data
-# table(flat_g_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
-# table(flat_r_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
-# table(sloan_g_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
-# table(sloan_r_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+table(flat_g_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+table(flat_r_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+table(sloan_g_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+table(sloan_r_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
 #
 # # Create the master-flats
-# flat_g_master = create_masterflat(flat_g_file_names, './processing/flat_g_master.fit')
-# flat_r_master = create_masterflat(flat_r_file_names, './processing/flat_r_master.fit')
-#
-# print(
-#     f"Averages of masterflats: {np.mean(flat_g_master)}, {np.mean(flat_r_master)}")
-# print(
-#     f"Standarddeviations of masterflats: {np.std(flat_g_master)}, {np.std(flat_r_master)}")
+flat_g_master = create_masterflat(flat_g_file_names, './processing/flat_g_master.fit')
+flat_r_master = create_masterflat(flat_r_file_names, './processing/flat_r_master.fit')
+
+print(
+    f"Averages of masterflats: {np.mean(flat_g_master)}, {np.mean(flat_r_master)}")
+print(
+    f"Standarddeviations of masterflats: {np.std(flat_g_master)}, {np.std(flat_r_master)}")
 #
 # # Correct the images (normalise)
-# flat_g_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
-# flat_r_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
-#
-# flatfield_normalisation(flat_g_file_names, flat_g_file_names_out, './processing/flat_g_master.fit')
-# flatfield_normalisation(flat_r_file_names, flat_r_file_names_out, './processing/flat_r_master.fit')
+flat_g_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
+flat_r_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
+
+flatfield_normalisation(flat_g_file_names, flat_g_file_names_out, './processing/flat_g_master.fit')
+flatfield_normalisation(flat_r_file_names, flat_r_file_names_out, './processing/flat_r_master.fit')
 #
 # # Align and combine the images
 #
 combine_images(sloan_g_file_names, "./processing/sloan_g_combined.fit")
 combine_images(sloan_r_file_names, "./processing/sloan_r_combined.fit")
 #
-# os.system("sex ./processing/sloan_g_combined.fit -CATALOG_NAME ./processing/g.cat")
-# os.system("sex ./processing/sloan_g_combined.fit,./processing/sloan_r_combined.fit -CATALOG_NAME ./processing/r.cat")
+os.system("sex ./processing/sloan_g_combined.fit -CATALOG_NAME ./processing/g.cat")
+os.system("sex ./processing/sloan_g_combined.fit,./processing/sloan_r_combined.fit -CATALOG_NAME ./processing/r.cat")
 #
 g_data = asc.read('./processing/g.cat')
 r_data = asc.read('./processing/r.cat')
@@ -197,7 +197,7 @@ with open("./data/urat.txt") as f:
         urat.append(lsplit)
 for star in urat:
     matched = match_star_magnitudes(star[0])
-    if matched == [] or matched[2] > 0.03 or matched[4] > 0.03:
+    if matched == [] or matched[2] > 0.015 or matched[4] > 0.015:
         continue
     if len(star) != 7:
         continue
@@ -243,7 +243,7 @@ MVH, BVH = np.loadtxt('./data/Hyades.txt', usecols=(1, 2), unpack=True)
 MVP, BVP = np.loadtxt('./data/Pleiades.txt', usecols=(1, 2), unpack=True)
 
 # Plot the apparent magnitude diagram
-plt.plot(g_r, g, '.', label="M36")
+plt.plot(g_r, g, '.', label="M67")
 plt.legend()
 plt.xlim(-0.3, 1.8)
 plt.ylim(np.max(g) + 1, np.min(g) - 1)
@@ -267,33 +267,26 @@ plt.title("CMD of M67 with absolute magnitudes")
 plt.minorticks_on()
 plt.show()
 
-# isochrones = np.loadtxt("isochrones.dat", usecols=(0, 8, 9))
-# isochrones_split = y = [isochrones[isochrones[:, 0] == k]
-#                         for k in np.unique(isochrones[:, 0])]
-# isochrone = isochrones_split[42]
-# xs = isochrone.transpose()[1]-isochrone.transpose()[2]
-# ys = isochrone.transpose()[1]
-# plt.plot(
-# xs, ys, label=f"{10**isochrone.transpose()[0][0]/1000000} Myr")
-#
-# plt.plot(B_V, v+V_absolute_offset, '.', label="M67")
-# # plt.plot(BVP, MVP, '.', label="Pleiades")
-# plt.plot(BVH, MVH, '.', label="Hyades")
 iso = cmd_read.ISOCMD('./data/isochrones.cmd')
-for i in range(len(iso.isocmds)):
-    B = iso.isocmds[i]['Bessell_B']
-    V = iso.isocmds[i]['Bessell_V']
-    plt.plot(B-V, V, label = iso.isocmds[i].)
-plt.plt()
-plt.show()
+isochrones = []
+ages = []
+for i in reversed(range(len(iso.isocmds))):
+    if i % 4 == 0 and i > 20:
+        isochrones.append(iso.isocmds[i])
+        ages.append(iso.ages[i])
 
-plt.legend()
-plt.xlim(-0.3, 1.8)
-plt.ylim(12, -4)
-plt.xlabel(r'$B-V$')
-plt.ylabel(r'$M_V$')
-plt.title("CMD of M36 with absolute magnitudes")
-plt.minorticks_on()
+for i in range(len(isochrones)):
+    B = isochrones[i]['Bessell_B']
+    V = isochrones[i]['Bessell_V']
+    plt.plot(B-V, V)
+
+plt.scatter(B_V, g + V_absolute_offset)
+legend = list(map(lambda x: f"10^{x:.1f}",ages))
+
+legend.append("Measured data")
+plt.legend(legend)
+plt.xlim(0.2,1.3)
+plt.ylim(2,9)
 plt.show()
 
 D = 10 * 10 ** (-V_absolute_offset / 5)
