@@ -6,6 +6,7 @@ import astroalign as aa
 import math
 import astropy.io.ascii as asc
 from astropy.wcs import WCS
+import matplotlib.pyplot as plt
 
 
 # Print a 2D array with header
@@ -122,55 +123,55 @@ if not os.path.isdir('./processing'):
     os.makedirs('./processing')
 
 # Print the data from the FITS files
-flat_g_image_headers = []
-flat_r_image_headers = []
-sloan_g_image_headers = []
-sloan_r_image_headers = []
-
-for i in range(10):
-    flat_g_data, flat_g_header = fits.getdata(flat_g_file_names[i], header=True)
-    flat_r_data, flat_r_header = fits.getdata(flat_r_file_names[i], header=True)
-    sloan_g_data, sloan_g_header = fits.getdata(sloan_g_file_names[i], header=True)
-    sloan_r_data, sloan_r_header = fits.getdata(sloan_r_file_names[i], header=True)
-    flat_g_image_headers.append(filter_header_data(flat_g_file_names[i], flat_g_header, np.mean(flat_g_data)))
-    flat_r_image_headers.append(filter_header_data(flat_r_file_names[i], flat_r_header, np.mean(flat_r_data)))
-    sloan_g_image_headers.append(filter_header_data(sloan_g_file_names[i], sloan_g_header, np.mean(sloan_g_data)))
-    sloan_r_image_headers.append(filter_header_data(sloan_r_file_names[i], sloan_r_header, np.mean(sloan_g_data)))
-
-# Display the data
-table(flat_g_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
-table(flat_r_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
-table(sloan_g_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
-table(sloan_r_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
-
-# Create the master-flats
-flat_g_master = create_masterflat(flat_g_file_names, './processing/flat_g_master.fit')
-flat_r_master = create_masterflat(flat_r_file_names, './processing/flat_r_master.fit')
-
-print(
-    f"Averages of masterflats: {np.mean(flat_g_master)}, {np.mean(flat_r_master)}")
-print(
-    f"Standarddeviations of masterflats: {np.std(flat_g_master)}, {np.std(flat_r_master)}")
-
-# Correct the images (normalise)
-flat_g_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
-flat_r_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
-
-flatfield_normalisation(flat_g_file_names, flat_g_file_names_out, './processing/flat_g_master.fit')
-flatfield_normalisation(flat_r_file_names, flat_r_file_names_out, './processing/flat_r_master.fit')
-
-# Align and combine the images
-
-combine_images(sloan_g_file_names, "./processing/sloan_g_combined.fit")
-combine_images(sloan_r_file_names, "./processing/sloan_r_combined.fit")
-
-os.system("sex ./processing/sloan_g_combined.fit -CATALOG_NAME ./processing/g.cat")
-os.system("sex ./processing/sloan_g_combined.fit,./processing/sloan_r_combined.fit -CATALOG_NAME ./processing/r.cat")
-
+# flat_g_image_headers = []
+# flat_r_image_headers = []
+# sloan_g_image_headers = []
+# sloan_r_image_headers = []
+#
+# for i in range(10):
+#     flat_g_data, flat_g_header = fits.getdata(flat_g_file_names[i], header=True)
+#     flat_r_data, flat_r_header = fits.getdata(flat_r_file_names[i], header=True)
+#     sloan_g_data, sloan_g_header = fits.getdata(sloan_g_file_names[i], header=True)
+#     sloan_r_data, sloan_r_header = fits.getdata(sloan_r_file_names[i], header=True)
+#     flat_g_image_headers.append(filter_header_data(flat_g_file_names[i], flat_g_header, np.mean(flat_g_data)))
+#     flat_r_image_headers.append(filter_header_data(flat_r_file_names[i], flat_r_header, np.mean(flat_r_data)))
+#     sloan_g_image_headers.append(filter_header_data(sloan_g_file_names[i], sloan_g_header, np.mean(sloan_g_data)))
+#     sloan_r_image_headers.append(filter_header_data(sloan_r_file_names[i], sloan_r_header, np.mean(sloan_g_data)))
+#
+# # Display the data
+# table(flat_g_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+# table(flat_r_image_headers, ["FLAT NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+# table(sloan_g_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+# table(sloan_r_image_headers, ["NAME", "FILTER", "EXPOSURE", "AVERAGE"])
+#
+# # Create the master-flats
+# flat_g_master = create_masterflat(flat_g_file_names, './processing/flat_g_master.fit')
+# flat_r_master = create_masterflat(flat_r_file_names, './processing/flat_r_master.fit')
+#
+# print(
+#     f"Averages of masterflats: {np.mean(flat_g_master)}, {np.mean(flat_r_master)}")
+# print(
+#     f"Standarddeviations of masterflats: {np.std(flat_g_master)}, {np.std(flat_r_master)}")
+#
+# # Correct the images (normalise)
+# flat_g_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
+# flat_r_file_names_out = ["./processing/picC%d.fit" % i for i in range(1, 11)]
+#
+# flatfield_normalisation(flat_g_file_names, flat_g_file_names_out, './processing/flat_g_master.fit')
+# flatfield_normalisation(flat_r_file_names, flat_r_file_names_out, './processing/flat_r_master.fit')
+#
+# # Align and combine the images
+#
+# combine_images(sloan_g_file_names, "./processing/sloan_g_combined.fit")
+# combine_images(sloan_r_file_names, "./processing/sloan_r_combined.fit")
+#
+# os.system("sex ./processing/sloan_g_combined.fit -CATALOG_NAME ./processing/g.cat")
+# os.system("sex ./processing/sloan_g_combined.fit,./processing/sloan_r_combined.fit -CATALOG_NAME ./processing/r.cat")
+#
 g_data = asc.read('./processing/g.cat')
 r_data = asc.read('./processing/r.cat')
 
-# Load the data from the URAT catalogue around M67
+# # Load the data from the URAT catalogue around M67
 name, right_ascension, declination = [], [], []
 with open("./data/urat.txt") as f:
     for line in f:
@@ -195,7 +196,7 @@ with open("./data/urat.txt") as f:
         urat.append(lsplit)
 for star in urat:
     matched = match_star_magnitudes(star[0])
-    if matched == [] or matched[2] > 0.05 or matched[4] > 0.05:
+    if matched == [] or matched[2] > 0.03 or matched[4] > 0.03:
         continue
     if len(star) != 7:
         continue
@@ -209,8 +210,8 @@ for star in urat:
 g_offsets = []
 r_offsets = []
 for star in urat_with_instrumental_magnitudes:
-    g_offsets.append(float(star[3])-float(star[7]))
-    r_offsets.append(float(star[5])-float(star[9]))
+    g_offsets.append(float(star[3]) - float(star[7]))
+    r_offsets.append(float(star[5]) - float(star[9]))
 g_offsets = np.array(g_offsets)
 r_offsets = np.array(r_offsets)
 g_offset = np.mean(g_offsets)
@@ -229,13 +230,58 @@ for i in range(len(g_data)):
         continue  # I had quite a lot of really inaccurate data, this gets rid of it
     if g_data[i]["X_IMAGE"] > 2000 and g_data[i]["Y_IMAGE"] < 220:
         continue  # This is the area of the field that had ice on it
-    g_r.append(g_data[i]["MAG_APER"]-r_data[i]["MAG_APER"])
+    g_r.append(g_data[i]["MAG_APER"] - r_data[i]["MAG_APER"])
     g.append(g_data[i]["MAG_APER"])
 g_r = np.array(g_r)
 g = np.array(g)
 
-B_V = 0.90*g_r + 0.21
-V = g - 0.58*g_r - 0.01
+B_V = 0.90 * g_r + 0.21
+V = g - 0.58 * g_r - 0.01
 
 MVH, BVH = np.loadtxt('./data/Hyades.txt', usecols=(1, 2), unpack=True)
 MVP, BVP = np.loadtxt('./data/Pleiades.txt', usecols=(1, 2), unpack=True)
+
+# Plot the apparent magnitude diagram
+plt.plot(g_r, g, '.', label="M36")
+plt.legend()
+plt.xlim(-0.3, 1.8)
+plt.ylim(np.max(g) + 1, np.min(g) - 1)
+plt.xlabel(r'$g-r$')
+plt.ylabel(r'$M_g$')
+plt.title("CMD of M67 with apparent magnitudes")
+plt.minorticks_on()
+plt.show()
+
+V_absolute_offset = -9.7  # This variable has to be redetermined for every cluster
+# Plot the hyades and pleiades for calibration of V_absolute_offset
+plt.plot(BVH, MVH, '.', label='Hyades')
+plt.plot(BVP, MVP, '.', label='Pleiades')
+plt.plot(B_V, V + V_absolute_offset, '.', label="M67")
+plt.legend()
+plt.xlim(-0.3, 1.8)
+plt.ylim(12, -4)
+plt.xlabel(r'$B-V$')
+plt.ylabel(r'$M_V$')
+plt.title("CMD of M67 with absolute magnitudes")
+plt.minorticks_on()
+plt.show()
+
+D = 10 * 10**(-V_absolute_offset/5)
+MSTO = -0.40  # This is in the g filter
+age = 10**((MSTO+27.75)/3.18)
+age2 = (10**10)*(10**((MSTO-5.23)/-2.5))**(-5/7)
+offset_max = -10
+offset_min = -9
+distance_min = 10*10**(-offset_min/5)
+distance_max = 10*10**(-offset_max/5)
+
+age_max = 10**((MSTO-V_absolute_offset+offset_min+27.75)/3.18)
+age_min = 10**((MSTO-V_absolute_offset+offset_max+27.75)/3.18)
+
+
+
+
+# print(f"FWHM in g and r filters: {np.mean(fwhm_g)} and {np.mean(fwhm_r)}")
+
+print(
+    f"The distance to M36 is determined at {D}pc (+{distance_max-D}/-{D-distance_min}), and its age is {(age/1000000)} (+{(age_max-age)/1000000}/-{(age-age_min)/1000000}) Myr.")

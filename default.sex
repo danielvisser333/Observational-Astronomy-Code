@@ -46,13 +46,13 @@ PIXEL_SCALE      1.0            # size of pixel in arcsec (0=use FITS WCS info)
 
 #------------------------- Star/Galaxy Separation ----------------------------
 
-SEEING_FWHM      10            # stellar FWHM in arcsec
+SEEING_FWHM      6            # stellar FWHM in arcsec
 STARNNW_NAME     default.nnw    # Neural-Network_Weight table filename
 
 #------------------------------ Background -----------------------------------
 
 BACK_SIZE        100             # Background mesh: <size> or <width>,<height>
-BACK_FILTERSIZE  10              # Background filter: <size> or <width>,<height>
+BACK_FILTERSIZE  3,3              # Background filter: <size> or <width>,<height>
 
 BACKPHOTO_TYPE   GLOBAL         # can be GLOBAL or LOCAL
 
