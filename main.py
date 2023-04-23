@@ -7,6 +7,7 @@ import math
 import astropy.io.ascii as asc
 from astropy.wcs import WCS
 import matplotlib.pyplot as plt
+import cmd_read
 
 
 # Print a 2D array with header
@@ -162,8 +163,8 @@ if not os.path.isdir('./processing'):
 #
 # # Align and combine the images
 #
-# combine_images(sloan_g_file_names, "./processing/sloan_g_combined.fit")
-# combine_images(sloan_r_file_names, "./processing/sloan_r_combined.fit")
+combine_images(sloan_g_file_names, "./processing/sloan_g_combined.fit")
+combine_images(sloan_r_file_names, "./processing/sloan_r_combined.fit")
 #
 # os.system("sex ./processing/sloan_g_combined.fit -CATALOG_NAME ./processing/g.cat")
 # os.system("sex ./processing/sloan_g_combined.fit,./processing/sloan_r_combined.fit -CATALOG_NAME ./processing/r.cat")
@@ -236,7 +237,7 @@ g_r = np.array(g_r)
 g = np.array(g)
 
 B_V = 0.90 * g_r + 0.21
-V = g - 0.58 * g_r - 0.01
+v = g - 0.58 * g_r - 0.01
 
 MVH, BVH = np.loadtxt('./data/Hyades.txt', usecols=(1, 2), unpack=True)
 MVP, BVP = np.loadtxt('./data/Pleiades.txt', usecols=(1, 2), unpack=True)
@@ -256,7 +257,7 @@ V_absolute_offset = -9.7  # This variable has to be redetermined for every clust
 # Plot the hyades and pleiades for calibration of V_absolute_offset
 plt.plot(BVH, MVH, '.', label='Hyades')
 plt.plot(BVP, MVP, '.', label='Pleiades')
-plt.plot(B_V, V + V_absolute_offset, '.', label="M67")
+plt.plot(B_V, g + V_absolute_offset, '.', label="M67")
 plt.legend()
 plt.xlim(-0.3, 1.8)
 plt.ylim(12, -4)
@@ -266,22 +267,41 @@ plt.title("CMD of M67 with absolute magnitudes")
 plt.minorticks_on()
 plt.show()
 
-D = 10 * 10**(-V_absolute_offset/5)
-MSTO = -0.40  # This is in the g filter
-age = 10**((MSTO+27.75)/3.18)
-age2 = (10**10)*(10**((MSTO-5.23)/-2.5))**(-5/7)
+# isochrones = np.loadtxt("isochrones.dat", usecols=(0, 8, 9))
+# isochrones_split = y = [isochrones[isochrones[:, 0] == k]
+#                         for k in np.unique(isochrones[:, 0])]
+# isochrone = isochrones_split[42]
+# xs = isochrone.transpose()[1]-isochrone.transpose()[2]
+# ys = isochrone.transpose()[1]
+# plt.plot(
+# xs, ys, label=f"{10**isochrone.transpose()[0][0]/1000000} Myr")
+#
+# plt.plot(B_V, v+V_absolute_offset, '.', label="M67")
+# # plt.plot(BVP, MVP, '.', label="Pleiades")
+# plt.plot(BVH, MVH, '.', label="Hyades")
+iso = cmd_read.ISOCMD('./data/isochrones.cmd')
+for i in range(len(iso.isocmds)):
+    B = iso.isocmds[i]['Bessell_B']
+    V = iso.isocmds[i]['Bessell_V']
+    plt.plot(B-V, V, label = iso.isocmds[i].)
+plt.plt()
+plt.show()
+
+plt.legend()
+plt.xlim(-0.3, 1.8)
+plt.ylim(12, -4)
+plt.xlabel(r'$B-V$')
+plt.ylabel(r'$M_V$')
+plt.title("CMD of M36 with absolute magnitudes")
+plt.minorticks_on()
+plt.show()
+
+D = 10 * 10 ** (-V_absolute_offset / 5)
 offset_max = -10
 offset_min = -9
-distance_min = 10*10**(-offset_min/5)
-distance_max = 10*10**(-offset_max/5)
-
-age_max = 10**((MSTO-V_absolute_offset+offset_min+27.75)/3.18)
-age_min = 10**((MSTO-V_absolute_offset+offset_max+27.75)/3.18)
-
-
-
+distance_min = 10 * 10 ** (-offset_min / 5)
+distance_max = 10 * 10 ** (-offset_max / 5)
 
 # print(f"FWHM in g and r filters: {np.mean(fwhm_g)} and {np.mean(fwhm_r)}")
-
 print(
-    f"The distance to M36 is determined at {D}pc (+{distance_max-D}/-{D-distance_min}), and its age is {(age/1000000)} (+{(age_max-age)/1000000}/-{(age-age_min)/1000000}) Myr.")
+    f"The distance to M36 is determined at {D}pc (+{distance_max - D}/-{D - distance_min}).")
