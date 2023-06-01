@@ -274,9 +274,8 @@ iso = cmd_read.ISOCMD('./data/isochrones.cmd')
 isochrones = []
 ages = []
 for i in reversed(range(len(iso.isocmds))):
-    if i % 4 == 0 and i > 20:
-        isochrones.append(iso.isocmds[i])
-        ages.append(iso.ages[i])
+    isochrones.append(iso.isocmds[i])
+    ages.append(iso.ages[i])
 
 for i in range(len(isochrones)):
     B = isochrones[i]['Bessell_B']
