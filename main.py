@@ -228,16 +228,19 @@ g_r = []
 g = []
 for i in range(len(g_data)):
     if g_data[i]["MAGERR_APER"] > 1 or r_data[i]["MAGERR_APER"] > 1:
-        continue  # I had quite a lot of really inaccurate data, this gets rid of it
+        print(g_data[i], r_data[i])
+    #    continue  # I had quite a lot of really inaccurate data, this gets rid of it
     if g_data[i]["X_IMAGE"] > 2000 and g_data[i]["Y_IMAGE"] < 220:
         continue  # This is the area of the field that had ice on it
+    if r_data[i]["MAG_APER"] > 20:
+        continue
     g_r.append(g_data[i]["MAG_APER"] - r_data[i]["MAG_APER"])
     g.append(g_data[i]["MAG_APER"])
 g_r = np.array(g_r)
 g = np.array(g)
 
-B_V = 0.90 * g_r + 0.21
-v = g - 0.58 * g_r - 0.01
+B_V = (g_r+0.23)/1.09
+v = g - 0.6 * B_V + 0.12
 
 MVH, BVH = np.loadtxt('./data/Hyades.txt', usecols=(1, 2), unpack=True)
 MVP, BVP = np.loadtxt('./data/Pleiades.txt', usecols=(1, 2), unpack=True)
@@ -285,8 +288,8 @@ legend = list(map(lambda x: f"10^{x:.1f}",ages))
 
 legend.append("Measured data")
 plt.legend(legend)
-plt.xlim(0.2,1.3)
-plt.ylim(2,9)
+#plt.xlim(0.2,1.3)
+#plt.ylim(2,9)
 plt.show()
 
 D = 10 * 10 ** (-V_absolute_offset / 5)
@@ -298,3 +301,12 @@ distance_max = 10 * 10 ** (-offset_max / 5)
 # print(f"FWHM in g and r filters: {np.mean(fwhm_g)} and {np.mean(fwhm_r)}")
 print(
     f"The distance to M36 is determined at {D}pc (+{distance_max - D}/-{D - distance_min}).")
+
+r_filter_average_exposures = [231.9452680717721,230.39620414842662,233.99146127854004,230.8995351530245,230.8995351530245,233.7834886193657,233.94982367779753,234.49782868216516]
+g_filter_average_exposures = [147.4994852287601,143.47954525362337,145.71146496952542,147.51761104762073,149.45035904716238,147.74415561933466,148.68092629874025,147.73124161054378]
+
+sky_brightness_g = -2.5 * \
+    np.log10(np.mean(g_filter_average_exposures)) + g_offset
+sky_brightness_r = -2.5 * \
+    np.log10(np.mean(r_filter_average_exposures)) + r_offset
+print(f"Brightnesses. {sky_brightness_g}, {sky_brightness_r}")
