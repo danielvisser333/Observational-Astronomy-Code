@@ -226,6 +226,8 @@ for i in range(len(g_data)):  # Add the zero point value to the source extractor
 
 g_r = []
 g = []
+g_r_error = []
+g_error = []
 for i in range(len(g_data)):
     if g_data[i]["MAGERR_APER"] > 1 or r_data[i]["MAGERR_APER"] > 1:
         print(g_data[i], r_data[i])
@@ -236,11 +238,19 @@ for i in range(len(g_data)):
         continue
     g_r.append(g_data[i]["MAG_APER"] - r_data[i]["MAG_APER"])
     g.append(g_data[i]["MAG_APER"])
+    g_r_error.append(g_data[i]["MAGERR_APER"] - r_data[i]["MAGERR_APER"])
+    g_error.append(g_data[i]["MAGERR_APER"])
+
+
 g_r = np.array(g_r)
 g = np.array(g)
+g_r_error = np.array(g_r_error)
+g_error = np.array(g_error)
 
 B_V = (g_r+0.23)/1.09
 v = g - 0.6 * B_V + 0.12
+B_V_error = (g_r_error / 1.09) ** 2 ** 0.5
+v_error = (g_error**2 + (0.6 * B_V_error)**2)**0.5
 
 MVH, BVH = np.loadtxt('./data/Hyades.txt', usecols=(1, 2), unpack=True)
 MVP, BVP = np.loadtxt('./data/Pleiades.txt', usecols=(1, 2), unpack=True)
@@ -256,11 +266,12 @@ plt.title("CMD of M67 with apparent magnitudes")
 plt.minorticks_on()
 plt.show()
 
-V_absolute_offset = -9.7  # This variable has to be redetermined for every cluster
+V_absolute_offset = -9.5  # This variable has to be redetermined for every cluster
 # Plot the hyades and pleiades for calibration of V_absolute_offset
-plt.plot(BVH, MVH, '.', label='Hyades')
-plt.plot(BVP, MVP, '.', label='Pleiades')
-plt.plot(B_V, g + V_absolute_offset, '.', label="M67")
+plt.scatter(BVH, MVH, label="Hyades", c='blue', s=5)
+plt.scatter(BVP, MVP, label="Pleiades", c='orange', s=5)
+plt.errorbar(B_V, v + V_absolute_offset, v_error, B_V_error, c='green', ls="None")
+plt.scatter(B_V, v + V_absolute_offset, label="M67", c='green', s=5)
 plt.legend()
 plt.xlim(-0.3, 1.8)
 plt.ylim(12, -4)
@@ -274,22 +285,25 @@ iso = cmd_read.ISOCMD('./data/isochrones.cmd')
 isochrones = []
 ages = []
 for i in reversed(range(len(iso.isocmds))):
-    isochrones.append(iso.isocmds[i])
-    ages.append(iso.ages[i])
+    if i % 4 == 0 and iso.ages[i] > 8.8:
+        isochrones.append(iso.isocmds[i])
+        ages.append(iso.ages[i])
 
 for i in range(len(isochrones)):
-    if i % 4 == 0:
-        B = isochrones[i]['Bessell_B']
-        V = isochrones[i]['Bessell_V']
-        plt.plot(B-V, V)
+    B = isochrones[i]['Bessell_B']
+    V = isochrones[i]['Bessell_V']
+    plt.plot(B-V, V)
 
-plt.scatter(B_V, g + V_absolute_offset)
+plt.scatter(B_V, v + V_absolute_offset, s=5)
 legend = list(map(lambda x: f"10^{x:.1f}",ages))
 
 legend.append("Measured data")
 plt.legend(legend)
-#plt.xlim(0.2,1.3)
-#plt.ylim(2,9)
+plt.xlim(0.2,1.3)
+plt.ylim(2,9)
+plt.xlabel("B-V")
+plt.ylabel("V")
+plt.title("The measured data compared to theoretical isochrones of certain ages")
 plt.show()
 
 D = 10 * 10 ** (-V_absolute_offset / 5)
