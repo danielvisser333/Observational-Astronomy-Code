@@ -229,7 +229,7 @@ g = []
 for i in range(len(g_data)):
     if g_data[i]["MAGERR_APER"] > 1 or r_data[i]["MAGERR_APER"] > 1:
         print(g_data[i], r_data[i])
-    #    continue  # I had quite a lot of really inaccurate data, this gets rid of it
+        continue  # I had quite a lot of really inaccurate data, this gets rid of it
     if g_data[i]["X_IMAGE"] > 2000 and g_data[i]["Y_IMAGE"] < 220:
         continue  # This is the area of the field that had ice on it
     if r_data[i]["MAG_APER"] > 20:
@@ -278,9 +278,10 @@ for i in reversed(range(len(iso.isocmds))):
     ages.append(iso.ages[i])
 
 for i in range(len(isochrones)):
-    B = isochrones[i]['Bessell_B']
-    V = isochrones[i]['Bessell_V']
-    plt.plot(B-V, V)
+    if i % 4 == 0:
+        B = isochrones[i]['Bessell_B']
+        V = isochrones[i]['Bessell_V']
+        plt.plot(B-V, V)
 
 plt.scatter(B_V, g + V_absolute_offset)
 legend = list(map(lambda x: f"10^{x:.1f}",ages))
@@ -308,4 +309,5 @@ sky_brightness_g = -2.5 * \
     np.log10(np.mean(g_filter_average_exposures)) + g_offset
 sky_brightness_r = -2.5 * \
     np.log10(np.mean(r_filter_average_exposures)) + r_offset
+print(g_offset, r_offset)
 print(f"Brightnesses. {sky_brightness_g}, {sky_brightness_r}")
